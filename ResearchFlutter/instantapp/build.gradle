@@ -1,0 +1,6 @@
+apply plugin: 'com.android.instantapp'
+
+dependencies {
+    implementation project(':TestingFeature_v1.0')
+    implementation project(':base')
+}
