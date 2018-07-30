@@ -1,6 +1,6 @@
 # san_google_contact
 
-An flutter apps that can get all contact list after login google account.
+An apps from Flutter Framework that can get all contact list after login google account.
 
 ## Getting Started
 
