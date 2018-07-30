@@ -4,7 +4,6 @@
 
 import 'package:english_words/english_words.dart';
 
-
 import 'dart:async';
 import 'dart:convert' show json;
 
@@ -182,6 +181,8 @@ class SignInDemoState extends State<SignInDemo> {
 // 25/07/2018
 //
 
+///**
+
 class HomePage extends StatelessWidget {
 
   //Latest Code
@@ -305,3 +306,5 @@ class RandomWordsState extends State<RandomWords>{
     );
   }
 }
+
+//*/
