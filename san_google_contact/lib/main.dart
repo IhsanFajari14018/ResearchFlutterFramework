@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:english_words/english_words.dart';
+//import 'package:english_words/english_words.dart';
 
 import 'dart:async';
 import 'dart:convert' show json;
@@ -53,7 +53,8 @@ class SignInDemoState extends State<SignInDemo> {
     _googleSignIn.signInSilently();
   }
 
-  //Create button to go to homepage
+  //Retrieve data from google
+  //send to method to return 1 of the contact
   Future<Null> _handleGetContact() async {
     setState(() {
       _contactText = "Loading contact info...";
@@ -72,20 +73,58 @@ class SignInDemoState extends State<SignInDemo> {
       return;
     }
     final Map<String, dynamic> data = json.decode(response.body);
+
+    // Set data to RandomWordsState
+    // It will be used to to retrieve all contact.
+    RandomWordsState.setData(data);
+
     //print out into terminal
+    print("I WANT TO SEE THIS data :");
     print(data);
-    final String namedContact = _pickFirstNamedContact(data);
-    setState(() {
-      if (namedContact != null) {
-        _contactText = "I see you know $namedContact!";
-      } else {
-        _contactText = "No contacts to display.";
-      }
-    });
+
+    //final String namedContact = _pickFirstNamedContact(data);
+
+//    setState(() {
+//      if (namedContact != null) {
+//        _contactText = "I see you know $namedContact!";
+//      } else {
+//        _contactText = "No contacts to display.";
+//      }
+//    });
   }
 
-  String _pickFirstNamedContact(Map<String, dynamic> data) {
+  // Method to return the first contact in list.
+  /*
+    String _pickFirstNamedContact(Map<String, dynamic> data) {
     final List<dynamic> connections = data['connections'];
+    int _panjang = connections.length;
+
+    //MANUAL DEBUGGER
+    print("Panjangna ::: $_panjang");
+
+//    for (int i = 0; i < 5; i++) {
+//      //write(connections.get);
+//      var nama = connections.removeLast();
+//      String namaValue = nama.toString();
+//      print("NAMANYA NIH $namaValue");
+//    }
+//    final Map<int, String> allContact = connections.asMap();
+//    String value = allContact.toString();
+//    print("ALL_CONTACT $value");
+
+//    while(_panjang > 0) {
+//      Map<String, dynamic> contact_2 = connections.removeLast();
+//      if (contact_2 != null) {
+//        final Map<String, dynamic> name_2 = contact_2['names'].firstWhere(
+//              (dynamic name_2) => name_2['displayName'] != null,
+//          orElse: () => null,
+//        );
+//        if (name_2 != null) {
+//          return name_2['displayName'];
+//        }
+//      }
+//    }
+
     final Map<String, dynamic> contact = connections?.firstWhere(
           (dynamic contact) => contact['names'] != null,
       orElse: () => null,
@@ -101,7 +140,9 @@ class SignInDemoState extends State<SignInDemo> {
     }
     return null;
   }
+  */
 
+  //Sign in handler
   Future<Null> _handleSignIn() async {
     try {
       await _googleSignIn.signIn();
@@ -115,6 +156,7 @@ class SignInDemoState extends State<SignInDemo> {
   }
 
   // PAGE DISPLAY :
+  // - navigate to homepage
   Widget _buildBody() {
     if (_currentUser != null) {
       return new Column(
@@ -158,6 +200,7 @@ class SignInDemoState extends State<SignInDemo> {
     }
   }
 
+  // PAGE DISPLAY -CONTAINER- :
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -170,8 +213,6 @@ class SignInDemoState extends State<SignInDemo> {
         ));
   }
 }
-
-
 
 
 //
@@ -195,36 +236,61 @@ class HomePage extends StatelessWidget {
       home: RandomWords(),
     );
   }
+
 }
 
-//Class to generate random words
+//Encapsulation class to generate random words
 class RandomWords extends StatefulWidget{
   @override
   createState() => RandomWordsState();
 }
 
 class RandomWordsState extends State<RandomWords>{
-  final _suggestions = <WordPair>[];
-  final _saved = Set<WordPair>();
+  //Once, it was used as the dummy data for listView
+  final _suggestions = <String>[];
+  //Keep saved words
+  final _saved = Set<String>();
   final _biggerFont = const TextStyle(fontSize:18.0);
-  //var _counter = 0;
 
-//  Old variable
-//  final _suggestions = <WordPair>[];
-//  final _biggerFont = const TextStyle(fontSize: 18.0);
+  //All contact data is here
+  static List<dynamic> defaultConnections;
+  static List<dynamic> connections ;
 
-  //
+  static void setData(Map<String, dynamic> data){
+    connections = data['connections'];
+    defaultConnections =  data['connections'];
+  }
+
+  void resetData(){
+    connections = defaultConnections;
+  }
+
+  // It will keep all the contact in list to ListView.builder
+  //TODO: Change the wordPairs into name from contact! : SUCCESS!
   Widget _buildSuggestions() {
     return ListView.builder(
         padding: const EdgeInsets.all(16.0),
-
         itemBuilder: (context, i) {
-          if (i.isOdd) return Divider();
-          final index = i ~/ 2;
-          if (index >= _suggestions.length) {
-            _suggestions.addAll(generateWordPairs().take(10));
+
+          //string to keep value of contact name before returned.
+          String nameValue = connections.toString();
+
+          //print("ASUP KENEH KADIEU : $nameValue");
+          Map<String, dynamic> contact;
+          if(!connections.isEmpty) {
+            contact = connections.removeLast();
           }
-          return _buildRow(_suggestions[index]);
+          if (contact != null) {
+            final Map<String, dynamic> name = contact['names'].firstWhere(
+                  (dynamic name) => name['displayName'] != null,
+              orElse: () => null,
+            );
+            if (name != null) {
+              nameValue = name['displayName'];
+            }
+          }
+
+          return _buildRow(nameValue);
         }
 
     );
@@ -247,9 +313,9 @@ class RandomWordsState extends State<RandomWords>{
     );
   }
 
-  //This method support the build method.
+  // This method support the build method.
+  // Create button to savedSuggestion Page
   void _pushSaved(){
-    //_counter++;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context){
@@ -257,7 +323,7 @@ class RandomWordsState extends State<RandomWords>{
                 (pair) {
               return ListTile(
                 title: Text(
-                  pair.asPascalCase,
+                  pair,
                   style: _biggerFont,
                 ),
               );
@@ -283,23 +349,27 @@ class RandomWordsState extends State<RandomWords>{
 
   //
   // Now the tiles is tappable
-  Widget _buildRow(WordPair pair){
+  // This method is used to save the string into SavedSuggestions page.
+  // TODO: in method _buildRow CHANGE THE pair PARAMETER to String !
+  Widget _buildRow(String pair){
     final alreadySaved = _saved.contains(pair);
     return ListTile(
       title: Text(
-        pair.asPascalCase,
+        pair,
         style: _biggerFont,
       ),
       trailing: Icon(
         alreadySaved ? Icons.favorite : Icons.favorite_border,
         color: alreadySaved ? Colors.red : null,
       ),
-      onTap: (){
+      onTap: (){ //What to do when tapped
         setState(() {
+          print("Kasimpen teu yeuh: $pair");
           if(alreadySaved){
             _saved.remove(pair);
           }else{
             _saved.add(pair);
+            resetData();
           }
         });
       },
