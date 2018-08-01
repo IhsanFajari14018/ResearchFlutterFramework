@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:english_words/english_words.dart';
+//import 'package:english_words/english_words.dart';
 
 import 'dart:async';
 import 'dart:convert' show json;
@@ -21,11 +21,11 @@ GoogleSignIn _googleSignIn = new GoogleSignIn(
 void main() {
   runApp(
     new MaterialApp(
-      title: 'Google Sign In',
-      home: new SignInDemo(),
-      routes: <String, WidgetBuilder>{
-        "/HomePage": (BuildContext context) => new HomePage()
-      }
+        title: 'Google Sign In',
+        home: new SignInDemo(),
+        routes: <String, WidgetBuilder>{
+          "/HomePage": (BuildContext context) => new HomePage()
+        }
     ),
   );
 }
@@ -53,10 +53,9 @@ class SignInDemoState extends State<SignInDemo> {
     _googleSignIn.signInSilently();
   }
 
-  //Create button to go to homepage
   Future<Null> _handleGetContact() async {
     setState(() {
-      _contactText = "Loading contact info...";
+      _contactText = "";
     });
     final http.Response response = await http.get(
       'https://people.googleapis.com/v1/people/me/connections'
@@ -71,35 +70,13 @@ class SignInDemoState extends State<SignInDemo> {
       print('People API ${response.statusCode} response: ${response.body}');
       return;
     }
-    final Map<String, dynamic> data = json.decode(response.body);
-    //print out into terminal
-    print(data);
-    final String namedContact = _pickFirstNamedContact(data);
-    setState(() {
-      if (namedContact != null) {
-        _contactText = "I see you know $namedContact!";
-      } else {
-        _contactText = "No contacts to display.";
-      }
-    });
-  }
 
-  String _pickFirstNamedContact(Map<String, dynamic> data) {
-    final List<dynamic> connections = data['connections'];
-    final Map<String, dynamic> contact = connections?.firstWhere(
-          (dynamic contact) => contact['names'] != null,
-      orElse: () => null,
-    );
-    if (contact != null) {
-      final Map<String, dynamic> name = contact['names'].firstWhere(
-            (dynamic name) => name['displayName'] != null,
-        orElse: () => null,
-      );
-      if (name != null) {
-        return name['displayName'];
-      }
-    }
-    return null;
+    final Map<String, dynamic> data = json.decode(response.body);
+    RandomWordsState.setData(data);
+
+    //print out into terminal
+    //print(data);
+
   }
 
   Future<Null> _handleSignIn() async {
@@ -134,7 +111,7 @@ class SignInDemoState extends State<SignInDemo> {
             onPressed: _handleSignOut,
           ),
           new RaisedButton(
-            child: const Text('HOMEPAGE'),
+            child: const Text('CONTACT'),
             //onPressed: _handleGetContact,
             onPressed: () {Navigator.of(context).pushNamed("/HomePage");},
           ),
@@ -204,38 +181,104 @@ class RandomWords extends StatefulWidget{
 }
 
 class RandomWordsState extends State<RandomWords>{
-  final _suggestions = <WordPair>[];
-  final _saved = Set<WordPair>();
+  //final _suggestions = <WordPair>[]; //DEFAULT
+  var _suggestions = <String>[];
+  final _contactSuggestions = <String>[];
+
+  final _saved = Set<String>();
   final _biggerFont = const TextStyle(fontSize:18.0);
-  //var _counter = 0;
+  static List<dynamic> connections;
+
+  int _contactLength;
+  int _currentIndex = 0;
 
 //  Old variable
 //  final _suggestions = <WordPair>[];
 //  final _biggerFont = const TextStyle(fontSize: 18.0);
 
-  //
-  Widget _buildSuggestions() {
-    return ListView.builder(
-        padding: const EdgeInsets.all(16.0),
+  static void setData(Map<String, dynamic> data){
+    connections = data['connections'];
+  }
 
-        itemBuilder: (context, i) {
-          if (i.isOdd) return Divider();
-          final index = i ~/ 2;
-          if (index >= _suggestions.length) {
-            _suggestions.addAll(generateWordPairs().take(10));
-          }
-          return _buildRow(_suggestions[index]);
+  void configureData(){
+    _contactLength = connections.length;
+
+    //Call corresponding method.
+    dataToArrayOfString();
+    setSuggestionToContact();
+
+  }
+
+  // This method is used to fill all the contact name to _suggestions variable.
+  // Later on, the _suggestions will  be used to generate listView builder item.
+  void dataToArrayOfString(){
+    //string to keep value of contact name before returned.
+    String nameValue = "INFO: Still empty.";
+
+    // debugger :
+    // print("ASUP KENEH KADIEU : $nameValue");
+
+    Map<String, dynamic> contact;
+    // ignore: prefer_is_not_empty
+    while(!connections.isEmpty) {
+      contact = connections.removeLast();
+
+      if (contact != null) {
+        final Map<String, dynamic> name = contact['names'].firstWhere(
+              (dynamic name) => name['displayName'] != null,
+          orElse: () => null,
+        );
+        if (name != null) {
+          nameValue = name['displayName'];
         }
+      }
 
-    );
+      _contactSuggestions.add(nameValue);
+    }
+  }
+
+  //Fill the variable for generator with contact data.
+  void setSuggestionToContact(){
+    _suggestions = _contactSuggestions;
+  }
+
+  void updateIndex(){
+    _currentIndex++;
+    print("$_currentIndex   $_contactLength");
+    // Reset
+    if(_currentIndex>_contactLength-1){
+      print("ASUP");
+      _currentIndex=0;
+    }
+  }
+
+  // TODO : Change the logic to return contact name!
+  // TODO : CHANGE THIS ALGORITHM TO MAKE THIS FIT!
+  Widget _buildSuggestions() {
+
+      return ListView.builder(
+          padding: const EdgeInsets.all(16.0),
+
+          // CUSTOM ALGORITHM :
+          itemBuilder: (context, i) {
+            //if(_currentIndex<_contactLength) {
+              int _idx = _currentIndex;
+              updateIndex();
+              return _buildRow(_suggestions[_idx]);
+          }
+
+      );
+
   }
 
   // The widget builder!
   @override
   Widget build(BuildContext context){
-//    final wordPair = WordPair.random();
-//    return Text(wordPair.asPascalCase);
-    //var _stringCounter = int.parse(_counter.toString());
+
+    // Configuring data before building widget and
+    // all of its content.
+    configureData();
+
     return Scaffold(
       appBar: AppBar(
         title: Text("List of concated word"),
@@ -257,7 +300,7 @@ class RandomWordsState extends State<RandomWords>{
                 (pair) {
               return ListTile(
                 title: Text(
-                  pair.asPascalCase,
+                  pair,
                   style: _biggerFont,
                 ),
               );
@@ -283,11 +326,12 @@ class RandomWordsState extends State<RandomWords>{
 
   //
   // Now the tiles is tappable
-  Widget _buildRow(WordPair pair){
+  // TODO: Wordpair should String! DONE
+  Widget _buildRow(String pair){
     final alreadySaved = _saved.contains(pair);
     return ListTile(
       title: Text(
-        pair.asPascalCase,
+        pair,
         style: _biggerFont,
       ),
       trailing: Icon(
@@ -297,8 +341,10 @@ class RandomWordsState extends State<RandomWords>{
       onTap: (){
         setState(() {
           if(alreadySaved){
+            print("eusina pair REMOVE : $pair");
             _saved.remove(pair);
           }else{
+            print("eusina pair ADD: $pair");
             _saved.add(pair);
           }
         });
@@ -306,5 +352,3 @@ class RandomWordsState extends State<RandomWords>{
     );
   }
 }
-
-//*/
