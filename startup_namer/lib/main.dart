@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 
-/**
- * The project guide :
- * https://flutter.io/get-started/codelab/
- * 25/07/2018
- */
+//
+// The project guide :
+// https://flutter.io/get-started/codelab/
+// 25/07/2018
+//
 
 void main() => runApp(MyApp());
 
@@ -69,6 +69,8 @@ class RandomWordsState extends State<RandomWords>{
           if (index >= _suggestions.length) {
             _suggestions.addAll(generateWordPairs().take(10));
           }
+          String temp = _suggestions.toString();
+          print(temp);
           return _buildRow(_suggestions[index]);
         }
 
