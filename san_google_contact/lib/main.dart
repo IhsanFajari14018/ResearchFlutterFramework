@@ -190,10 +190,6 @@ class RandomWordsState extends State<RandomWords>{
   int _contactLength;
   int _currentIndex = 0;
 
-//  Old variable
-//  final _suggestions = <WordPair>[];
-//  final _biggerFont = const TextStyle(fontSize: 18.0);
-
   static void setData(Map<String, dynamic> data){
     connections = data['connections'];
   }
