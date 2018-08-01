@@ -74,9 +74,6 @@ class SignInDemoState extends State<SignInDemo> {
     final Map<String, dynamic> data = json.decode(response.body);
     RandomWordsState.setData(data);
 
-    //print out into terminal
-    //print(data);
-
   }
 
   Future<Null> _handleSignIn() async {
@@ -187,6 +184,7 @@ class RandomWordsState extends State<RandomWords>{
 
   final _saved = Set<String>();
   final _biggerFont = const TextStyle(fontSize:18.0);
+
   static List<dynamic> connections;
 
   int _contactLength;
@@ -215,13 +213,12 @@ class RandomWordsState extends State<RandomWords>{
     //string to keep value of contact name before returned.
     String nameValue = "INFO: Still empty.";
 
-    // debugger :
-    // print("ASUP KENEH KADIEU : $nameValue");
 
     Map<String, dynamic> contact;
+    int _idx = 0;
     // ignore: prefer_is_not_empty
-    while(!connections.isEmpty) {
-      contact = connections.removeLast();
+    while(_idx<connections.length-1) {
+      contact = connections.elementAt(_idx);
 
       if (contact != null) {
         final Map<String, dynamic> name = contact['names'].firstWhere(
@@ -233,7 +230,10 @@ class RandomWordsState extends State<RandomWords>{
         }
       }
 
+      // push value
       _contactSuggestions.add(nameValue);
+      // update index
+        _idx++;
     }
   }
 
@@ -242,29 +242,61 @@ class RandomWordsState extends State<RandomWords>{
     _suggestions = _contactSuggestions;
   }
 
-  void updateIndex(){
-    _currentIndex++;
-    print("$_currentIndex   $_contactLength");
-    // Reset
-    if(_currentIndex>_contactLength-1){
-      print("ASUP");
-      _currentIndex=0;
+  // Ferify the _suggestion[], does it already has a corresponding value
+  // if yes return true to push the contact name to be build in itemBuilder,
+  // else return false which means that the contact name already pushed.
+  bool isInSuggestions(String name){
+
+    if(_suggestions.contains(name)){
+      return true;
+    }else{
+      return false;
     }
   }
 
-  // TODO : Change the logic to return contact name!
-  // TODO : CHANGE THIS ALGORITHM TO MAKE THIS FIT!
-  Widget _buildSuggestions() {
+  // It used reset the index to 0.
+  // This method will keep the contact in ListView are arranged as it's
+  // supposed to.
+  void resetIndex(){
+    _currentIndex = 0;
+  }
 
+  // Index updater for pointing the contact name in _suggestions[]
+  void updateIndex(){
+    _currentIndex++;
+    print("$_currentIndex   $_contactLength");
+
+    // Reset
+    if(_currentIndex>_contactLength-1){
+      // debugger
+      print("ASUP $_currentIndex > $_contactLength");
+      resetIndex();
+    }
+  }
+
+  // TODO : Change the logic to return contact name! DONE
+  // TODO : CHANGE THIS ALGORITHM TO MAKE THIS FIT! ALMOST DONE
+  Widget _buildSuggestions() {
       return ListView.builder(
           padding: const EdgeInsets.all(16.0),
 
-          // CUSTOM ALGORITHM :
           itemBuilder: (context, i) {
-            //if(_currentIndex<_contactLength) {
               int _idx = _currentIndex;
               updateIndex();
-              return _buildRow(_suggestions[_idx]);
+
+              // debugger
+              // String temp = _suggestions.toString();
+              print("ISI SUGGEST $_idx");
+
+              // check is contact exist,
+              // if not dont push.
+              if(isInSuggestions(_suggestions[_idx])){
+                return _buildRow(_suggestions[_idx]);
+              }else{
+                print("IRAHA ABUS KADIEU?");
+                return _buildRow("0");
+              }
+
           }
 
       );
@@ -278,7 +310,8 @@ class RandomWordsState extends State<RandomWords>{
     // Configuring data before building widget and
     // all of its content.
     configureData();
-
+    resetIndex();
+    
     return Scaffold(
       appBar: AppBar(
         title: Text("List of concated word"),
@@ -292,10 +325,10 @@ class RandomWordsState extends State<RandomWords>{
 
   //This method support the build method.
   void _pushSaved(){
-    //_counter++;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context){
+          resetIndex();
           final tiles = _saved.map(
                 (pair) {
               return ListTile(
@@ -342,9 +375,11 @@ class RandomWordsState extends State<RandomWords>{
         setState(() {
           if(alreadySaved){
             print("eusina pair REMOVE : $pair");
+            resetIndex();
             _saved.remove(pair);
           }else{
             print("eusina pair ADD: $pair");
+            resetIndex();
             _saved.add(pair);
           }
         });
