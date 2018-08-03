@@ -190,14 +190,12 @@ class RandomWordsState extends State<RandomWords>{
   int _contactLength;
   int _currentIndex = 0;
 
-//  Old variable
-//  final _suggestions = <WordPair>[];
-//  final _biggerFont = const TextStyle(fontSize: 18.0);
-
   static void setData(Map<String, dynamic> data){
     connections = data['connections'];
   }
 
+  // Configuring data to put all the contact from data into List.
+  // Later it will be managed in Map structure.
   void configureData(){
     _contactLength = connections.length;
 
@@ -233,7 +231,7 @@ class RandomWordsState extends State<RandomWords>{
       // push value
       _contactSuggestions.add(nameValue);
       // update index
-        _idx++;
+      _idx++;
     }
   }
 
@@ -242,15 +240,14 @@ class RandomWordsState extends State<RandomWords>{
     _suggestions = _contactSuggestions;
   }
 
-  // Ferify the _suggestion[], does it already has a corresponding value
-  // if yes return true to push the contact name to be build in itemBuilder,
-  // else return false which means that the contact name already pushed.
-  bool isInSuggestions(String name){
-
-    if(_suggestions.contains(name)){
-      return true;
-    }else{
+  // Ferify the _suggestion[], does it already has a corresponding value?
+  // If yes return false to push nothing to ListView builder,
+  // else return true which means that the contact name already pushed.
+  bool isInSaved(String name){
+    if(_saved.contains(name)){
       return false;
+    }else{
+      return true;
     }
   }
 
@@ -264,12 +261,9 @@ class RandomWordsState extends State<RandomWords>{
   // Index updater for pointing the contact name in _suggestions[]
   void updateIndex(){
     _currentIndex++;
-    print("$_currentIndex   $_contactLength");
 
     // Reset
     if(_currentIndex>_contactLength-1){
-      // debugger
-      print("ASUP $_currentIndex > $_contactLength");
       resetIndex();
     }
   }
@@ -277,30 +271,24 @@ class RandomWordsState extends State<RandomWords>{
   // TODO : Change the logic to return contact name! DONE
   // TODO : CHANGE THIS ALGORITHM TO MAKE THIS FIT! ALMOST DONE
   Widget _buildSuggestions() {
-      return ListView.builder(
-          padding: const EdgeInsets.all(16.0),
+    return ListView.builder(
+        padding: const EdgeInsets.all(16.0),
 
-          itemBuilder: (context, i) {
-              int _idx = _currentIndex;
-              updateIndex();
+        itemBuilder: (context, i) {
+          int _idx = _currentIndex;
+          updateIndex();
 
-              // debugger
-              // String temp = _suggestions.toString();
-              print("ISI SUGGEST $_idx");
-
-              // check is contact exist,
-              // if not dont push.
-              if(isInSuggestions(_suggestions[_idx])){
-                return _buildRow(_suggestions[_idx]);
-              }else{
-                print("IRAHA ABUS KADIEU?");
-                return _buildRow("0");
-              }
-
+          // check is contact exist,
+          // if not dont push.
+          if(isInSaved(_suggestions[_idx])){
+            return _buildRow(_suggestions[_idx]);
+          }else{
+            print("IRAHA ABUS KADIEU?");
+            return _buildRow(_suggestions[_idx]);
           }
 
-      );
-
+        }
+    );
   }
 
   // The widget builder!
@@ -311,7 +299,7 @@ class RandomWordsState extends State<RandomWords>{
     // all of its content.
     configureData();
     resetIndex();
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text("List of concated word"),
@@ -357,7 +345,6 @@ class RandomWordsState extends State<RandomWords>{
     );
   }
 
-  //
   // Now the tiles is tappable
   // TODO: Wordpair should String! DONE
   Widget _buildRow(String pair){
@@ -374,11 +361,9 @@ class RandomWordsState extends State<RandomWords>{
       onTap: (){
         setState(() {
           if(alreadySaved){
-            print("eusina pair REMOVE : $pair");
             resetIndex();
             _saved.remove(pair);
           }else{
-            print("eusina pair ADD: $pair");
             resetIndex();
             _saved.add(pair);
           }
